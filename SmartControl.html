@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Smart Home Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@300;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #121212;
+        color: #e0e0e0;
+        text-align: center;
+        margin: 0;
+        padding: 20px;
+      }
+      .card {
+        max-width: 380px;
+        margin: 20px auto;
+        background: #1e1e2e;
+        padding: 30px;
+        border-radius: 25px;
+        box-shadow: 0 0 20px rgba(0, 210, 255, 0.1);
+        border: 1px solid #333;
+      }
+      h1 {
+        color: #fff;
+        margin-bottom: 5px;
+        font-size: 24px;
+      }
+      h3 {
+        color: #00d2ff;
+        font-weight: 300;
+        margin-top: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      /* أيقونة الليد الكبيرة */
+      .bulb-icon {
+        font-size: 80px;
+        color: #444;
+        margin: 20px 0;
+        transition: 0.3s ease;
+      }
+      .bulb-on {
+        color: #ffeb3b;
+        text-shadow: 0 0 30px #ffeb3b;
+      }
+
+      /* Hidden slider (kept for animation logic) */
+      #pwmSlider {
+        display: none;
+      }
+
+      /* Buttons */
+      .btn-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 15px;
+        margin-top: 20px;
+      }
+      .btn {
+        padding: 15px;
+        border: none;
+        border-radius: 15px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: transform 0.2s;
+      }
+      .btn:active {
+        transform: scale(0.95);
+      }
+
+      .btn-on {
+        background: linear-gradient(135deg, #00b09b, #96c93d);
+        box-shadow: 0 4px 15px rgba(0, 176, 155, 0.4);
+        grid-column: span 3;
+      }
+      .btn-high {
+        background: #2b2b40;
+        border: 1px solid #ffeb3b;
+        color: #ffeb3b;
+      }
+      .btn-med {
+        background: #2b2b40;
+        border: 1px solid #ff9800;
+        color: #ff9800;
+      }
+      .btn-low {
+        background: #2b2b40;
+        border: 1px solid #00d2ff;
+        color: #00d2ff;
+      }
+      .btn-off {
+        background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        grid-column: span 3;
+        box-shadow: 0 4px 15px rgba(255, 75, 43, 0.4);
+      }
+
+      /* Auto mode toggle */
+      .auto-toggle {
+        margin-top: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 14px;
+        border-radius: 20px;
+        background: #1a1a24;
+        border: 1px solid #333;
+        cursor: pointer;
+      }
+      .auto-label {
+        font-size: 13px;
+        color: #ccc;
+      }
+      .auto-indicator {
+        width: 38px;
+        height: 20px;
+        border-radius: 999px;
+        background: #444;
+        position: relative;
+        transition: background 0.2s;
+      }
+      .auto-knob {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #999;
+        transition: left 0.2s, background 0.2s;
+      }
+      .auto-on .auto-indicator {
+        background: #00b09b;
+      }
+      .auto-on .auto-knob {
+        left: 20px;
+        background: #ffffff;
+      }
+
+      .status-text {
+        font-size: 14px;
+        color: #888;
+        margin-top: 20px;
+      }
+      .fa-microphone {
+        color: #ff4b2b;
+        animation: pulse 2s infinite;
+      }
+
+      /* IP Configuration */
+      .ip-config {
+        margin-bottom: 20px;
+        padding: 12px;
+        background: #1a1a24;
+        border-radius: 12px;
+        border: 1px solid #333;
+      }
+      .ip-config label {
+        display: block;
+        font-size: 12px;
+        color: #888;
+        margin-bottom: 6px;
+        text-align: left;
+      }
+      .ip-input-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .ip-input {
+        flex: 1;
+        padding: 8px 12px;
+        background: #121212;
+        border: 1px solid #444;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 13px;
+        font-family: monospace;
+      }
+      .ip-input:focus {
+        outline: none;
+        border-color: #00b09b;
+      }
+      .ip-save-btn {
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #00b09b, #96c93d);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .ip-save-btn:active {
+        transform: scale(0.95);
+      }
+      .ip-status {
+        font-size: 11px;
+        color: #00b09b;
+        margin-top: 6px;
+        text-align: left;
+        display: none;
+      }
+      .ip-status.show {
+        display: block;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Smart Control</h1>
+      <h3><i class="fas fa-wifi"></i> Connected</h3>
+
+      <!-- IP Configuration -->
+      <div class="ip-config">
+        <label><i class="fas fa-network-wired"></i> ESP32 IP Address</label>
+        <div class="ip-input-group">
+          <input
+            type="text"
+            id="esp32IP"
+            class="ip-input"
+            placeholder="192.168.1.128"
+            value="192.168.1.138"
+          />
+          <button class="ip-save-btn" onclick="saveIP()">
+            <i class="fas fa-save"></i> Save
+          </button>
+        </div>
+        <div id="ipStatus" class="ip-status"></div>
+      </div>
+
+      <i id="bulbIcon" class="fas fa-lightbulb bulb-icon"></i>
+
+      <p>Brightness: <span id="statusValue">0</span>%</p>
+      <!-- Hidden slider used internally for brightness animation logic -->
+      <input
+        type="range"
+        min="0"
+        max="255"
+        value="0"
+        id="pwmSlider"
+        oninput="updateSlider(this.value)"
+      />
+
+      <div class="btn-grid">
+        <button class="btn btn-on" onclick="setLight(255)">
+          <i class="fas fa-power-off"></i> POWER ON
+        </button>
+
+        <button class="btn btn-high" onclick="setLight(255)">100%</button>
+        <button class="btn btn-med" onclick="setLight(128)">50%</button>
+        <button class="btn btn-low" onclick="setLight(77)">30%</button>
+
+        <button class="btn btn-off" onclick="setLight(0)">
+          <i class="fas fa-stop"></i> SHUT DOWN
+        </button>
+      </div>
+
+      <div
+        id="autoToggle"
+        class="auto-toggle auto-on"
+        onclick="toggleAutoMode()"
+      >
+        <span id="autoLabel" class="auto-label">Auto Mode: ON</span>
+        <div class="auto-indicator">
+          <div class="auto-knob"></div>
+        </div>
+      </div>
+
+      <div
+        class="status-text"
+        onclick="startVoiceControl()"
+        style="cursor: pointer"
+      >
+        <i class="fas fa-microphone"></i> Voice Control (click to speak)
+        <div id="voiceStatus"></div>
+      </div>
+    </div>
+
+    <script>
+      // ESP32 IP Configuration
+      let esp32IP = localStorage.getItem("esp32IP") || "192.168.1.138";
+
+      // Load saved IP on page load
+      window.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("esp32IP").value = esp32IP;
+      });
+
+      function saveIP() {
+        const input = document.getElementById("esp32IP");
+        const newIP = input.value.trim();
+
+        // Basic IP validation
+        const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+        if (!ipPattern.test(newIP)) {
+          showIPStatus("Invalid IP format", false);
+          return;
+        }
+
+        esp32IP = newIP;
+        localStorage.setItem("esp32IP", newIP);
+        showIPStatus("IP saved: " + newIP, true);
+
+        // Test connection
+        testConnection();
+      }
+
+      function showIPStatus(message, success) {
+        const status = document.getElementById("ipStatus");
+        status.textContent = message;
+        status.className = "ip-status show";
+        status.style.color = success ? "#00b09b" : "#ff4b2b";
+        setTimeout(() => {
+          status.classList.remove("show");
+        }, 3000);
+      }
+
+      function testConnection() {
+        var xhr = new XMLHttpRequest();
+        xhr.timeout = 2000;
+        xhr.onload = function () {
+          showIPStatus("✓ Connected to ESP32", true);
+        };
+        xhr.onerror = function () {
+          showIPStatus("⚠ Could not reach ESP32. Check IP and network.", false);
+        };
+        xhr.ontimeout = function () {
+          showIPStatus("⚠ Connection timeout. Check IP address.", false);
+        };
+        xhr.open("GET", "http://" + esp32IP + "/set?value=0", true);
+        xhr.send();
+      }
+
+      function getESP32URL(path) {
+        return "http://" + esp32IP + path;
+      }
+
+      function updateSlider(val) {
+        var percent = Math.round((val / 255) * 100);
+        document.getElementById("statusValue").innerText = percent;
+
+        // Update Bulb Glow
+        var bulb = document.getElementById("bulbIcon");
+        if (val > 0) {
+          bulb.classList.add("bulb-on");
+          bulb.style.opacity = val / 255 + 0.3; // Dynamic brightness effect
+        } else {
+          bulb.classList.remove("bulb-on");
+          bulb.style.opacity = 1;
+        }
+
+        sendData(val);
+      }
+
+      function setLight(val) {
+        document.getElementById("pwmSlider").value = val;
+        updateSlider(val);
+      }
+
+      function sendData(val) {
+        var xhr = new XMLHttpRequest();
+        // Send the value directly to your ESP32 at its IP address
+        xhr.open("GET", getESP32URL("/set?value=" + val), true);
+        xhr.send();
+      }
+
+      // Auto mode control
+      let autoModeOn = true;
+
+      function setAutoMode(on) {
+        autoModeOn = on;
+        updateAutoUI();
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", getESP32URL("/auto?value=" + (on ? 1 : 0)), true);
+        xhr.send();
+      }
+
+      function toggleAutoMode() {
+        setAutoMode(!autoModeOn);
+      }
+
+      function updateAutoUI() {
+        const toggle = document.getElementById("autoToggle");
+        const label = document.getElementById("autoLabel");
+        if (!toggle || !label) return;
+        if (autoModeOn) {
+          toggle.classList.add("auto-on");
+          label.textContent = "Auto Mode: ON";
+        } else {
+          toggle.classList.remove("auto-on");
+          label.textContent = "Auto Mode: OFF";
+        }
+      }
+
+      // Initialize UI state
+      updateAutoUI();
+
+      // Allow Enter key to save IP
+      document.addEventListener("DOMContentLoaded", function () {
+        const ipInput = document.getElementById("esp32IP");
+        if (ipInput) {
+          ipInput.addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+              saveIP();
+            }
+          });
+        }
+      });
+
+      // =============================
+      // Browser Voice Control (Web Speech API)
+      // =============================
+      let recognition = null;
+
+      function initVoice() {
+        const SpeechRecognition =
+          window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          document.getElementById("voiceStatus").innerText =
+            "Voice not supported in this browser";
+          return null;
+        }
+        const rec = new SpeechRecognition();
+        rec.lang = "en-US";
+        rec.continuous = false;
+        rec.interimResults = false;
+
+        rec.onstart = function () {
+          document.getElementById("voiceStatus").innerText = "Listening...";
+        };
+        // Don't clear status on end; onresult will overwrite with 'Heard: ...'
+        rec.onend = function () {};
+        rec.onerror = function (event) {
+          document.getElementById("voiceStatus").innerText =
+            "Voice error: " + (event.error || "");
+        };
+        rec.onresult = function (event) {
+          const text = event.results[0][0].transcript.toLowerCase();
+          document.getElementById("voiceStatus").innerText = "Heard: " + text;
+          handleVoiceCommand(text);
+        };
+
+        return rec;
+      }
+
+      function startVoiceControl() {
+        if (!recognition) {
+          recognition = initVoice();
+          if (!recognition) return;
+        }
+        recognition.start();
+      }
+
+      function handleVoiceCommand(cmd) {
+        // Lights on/off
+        if (
+          cmd.includes("lights on") ||
+          cmd.includes("light on") ||
+          cmd.includes("turn on")
+        ) {
+          setLight(255);
+          return;
+        }
+        if (
+          cmd.includes("lights off") ||
+          cmd.includes("light off") ||
+          cmd.includes("turn off")
+        ) {
+          setLight(0);
+          return;
+        }
+
+        // Brightness presets
+        if (
+          cmd.includes("full brightness") ||
+          cmd.includes("maximum brightness") ||
+          cmd.includes("max brightness") ||
+          cmd.includes("100 percent") ||
+          cmd.includes("hundred percent")
+        ) {
+          setLight(255); // 100%
+          return;
+        }
+        if (
+          cmd.includes("half brightness") ||
+          cmd.includes("50 percent") ||
+          cmd.includes("fifty percent")
+        ) {
+          setLight(128); // 50%
+          return;
+        }
+        if (
+          cmd.includes("30 percent") ||
+          cmd.includes("thirty percent") ||
+          cmd.includes("low brightness")
+        ) {
+          setLight(77); // 30%
+          return;
+        }
+
+        document.getElementById("voiceStatus").innerText =
+          "Say: 'lights on', 'lights off', 'full/half/30 percent brightness'";
+      }
+    </script>
+  </body>
+</html>
